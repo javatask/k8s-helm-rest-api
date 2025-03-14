@@ -4,6 +4,77 @@ In today's distributed edge computing landscape, managing applications across mu
 
 Helm, the package manager for Kubernetes, offers powerful capabilities to address these challenges. In this post, we'll explore how Helm can support atomic installations across multiple clusters using different Kubernetes contexts.
 
+```mermaid
+flowchart TB
+    subgraph "Control Station"
+        A[Admin Workstation]
+        K[kubeconfig with multiple contexts]
+        H[Helm CLI]
+        V[Values Files]
+        S[Deployment Script]
+    end
+    
+    subgraph "Helm Process"
+        PF[Pre-flight Validation]
+        D[Deployment Process]
+        M[Monitoring]
+    end
+    
+    subgraph "Kubernetes Clusters"
+        C1[Cluster 1: production-us-east]
+        C2[Cluster 2: production-us-west]
+        C3[Cluster 3: production-eu-central]
+    end
+    
+    A --> K
+    A --> H
+    A --> V
+    A --> S
+    
+    S --> PF
+    PF --> D
+    D --> M
+    
+    K --> C1
+    K --> C2
+    K --> C3
+    
+    H -- "helm upgrade --kube-context=cluster1" --> C1
+    H -- "helm upgrade --kube-context=cluster2" --> C2
+    H -- "helm upgrade --kube-context=cluster3" --> C3
+    
+    V -- "values-cluster1.yaml" --> C1
+    V -- "values-cluster2.yaml" --> C2
+    V -- "values-cluster3.yaml" --> C3
+    
+    subgraph "Per-Cluster Release"
+        C1 --> R1[Release: app-release-cluster1]
+        C2 --> R2[Release: app-release-cluster2]
+        C3 --> R3[Release: app-release-cluster3]
+    end
+    
+    subgraph "Atomic Deployment Strategy"
+        R1 --> RS{Success?}
+        R2 --> RS
+        R3 --> RS
+        
+        RS -- Yes --> Success[All Clusters Deployed]
+        RS -- No --> Rollback[Rollback All Clusters]
+    end
+    
+    classDef cluster fill:#326ce5,stroke:#fff,stroke-width:1px,color:white;
+    classDef process fill:#ff6b6b,stroke:#333,stroke-width:1px,color:white;
+    classDef control fill:#66bb6a,stroke:#333,stroke-width:1px,color:white;
+    classDef success fill:#4CAF50,stroke:#333,stroke-width:1px,color:white;
+    classDef failure fill:#f44336,stroke:#333,stroke-width:1px,color:white;
+    
+    class C1,C2,C3 cluster;
+    class PF,D,M process;
+    class A,K,H,V,S control;
+    class Success success;
+    class Rollback failure;
+```
+
 ## The Multi-Cluster Challenge
 
 Before diving into the solution, let's understand the problem:
