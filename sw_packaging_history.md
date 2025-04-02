@@ -120,6 +120,38 @@ In our reference topology, virtualization would allow each edge device to run mu
 ## The Container Revolution
 
 While virtual machines solved numerous problems, they introduced significant resource overhead—each VM required a complete operating system. Linux containers emerged as a lightweight alternative, sharing the host's kernel while maintaining application isolation.
+```mermaid
+graph TD
+    subgraph "Physical Hardware"
+        subgraph "Host Operating System"
+            Kernel[Kernel]
+            
+            subgraph "Container Runtime"
+                subgraph "Container 1"
+                    App1[Application A]
+                    Libs1[Libraries]
+                    Bins1[Binaries]
+                end
+                
+                subgraph "Container 2"
+                    App2[Application B]
+                    Libs2[Libraries]
+                    Bins2[Binaries]
+                end
+                
+                subgraph "Container 3"
+                    App3[Application C]
+                    Libs3[Libraries]
+                    Bins3[Binaries]
+                end
+            end
+            
+            App1 -.-> Kernel
+            App2 -.-> Kernel
+            App3 -.-> Kernel
+        end
+    end
+```
 
 This approach substantially reduced overhead and accelerated both development and distribution cycles. Containers enabled independent scaling of application components (database, business logic, frontend), but this independence introduced the challenges of distributed systems, famously articulated as the "eight fallacies":
 
@@ -143,6 +175,61 @@ Google's experience running massive systems on commodity hardware—where failur
 Docker revolutionized container management by addressing the complexity of "raw" Linux containers, offering an improved developer experience for building, testing, and deploying containerized applications. However, when organizations scaled to multiple teams producing hundreds of containers running mission-critical applications, Docker's single-machine focus became a limitation.
 
 This constraint catalyzed the creation of Kubernetes—a comprehensive orchestration platform designed specifically for the operational challenges of running distributed applications at scale. Kubernetes directly addressed the distributed systems fallacies that Docker alone couldn't solve.
+
+```mermaid
+graph TD
+    subgraph "Kubernetes Cluster"
+        subgraph "Control Plane"
+            API[API Server]
+            Scheduler[Scheduler]
+            CM[Controller Manager]
+            ETCD[etcd]
+            
+            API --- Scheduler
+            API --- CM
+            API --- ETCD
+        end
+        
+        subgraph "Worker Node 1"
+            Kubelet1[Kubelet]
+            CR1[Container Runtime]
+            
+            subgraph "Pod 1.1"
+                C1[Container A]
+                C2[Container B]
+            end
+            
+            subgraph "Pod 1.2"
+                C3[Container C]
+            end
+            
+            Kubelet1 --- CR1
+            CR1 --- Pod1.1
+            CR1 --- Pod1.2
+        end
+        
+        subgraph "Worker Node 2"
+            Kubelet2[Kubelet]
+            CR2[Container Runtime]
+            
+            subgraph "Pod 2.1"
+                C4[Container D]
+            end
+            
+            subgraph "Pod 2.2"
+                C5[Container E]
+                C6[Container F]
+            end
+            
+            Kubelet2 --- CR2
+            CR2 --- Pod2.1
+            CR2 --- Pod2.2
+        end
+        
+        API --- Kubelet1
+        API --- Kubelet2
+    end
+```
 
 In our reference deployment, Docker alone would require managing each of the nine edge devices separately, while Kubernetes could provide a unified control plane for coordinating deployments, ensuring availability, and managing failures automatically.
 
